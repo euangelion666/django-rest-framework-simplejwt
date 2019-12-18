@@ -99,7 +99,7 @@ class TokenObtainPairInCookiesView(TokenViewBase):
         except TokenError as e:
             raise InvalidToken(e.args[0])
 
-        response = Response(data={'refresh': serializer.validated_data['access']}, status=status.HTTP_200_OK)
+        response = Response(data={'access': serializer.validated_data['access']}, status=status.HTTP_200_OK)
         response.set_cookie('refresh', serializer.validated_data['refresh'], httponly=True)
         return response
 
