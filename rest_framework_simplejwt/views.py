@@ -30,7 +30,6 @@ class TokenViewBase(generics.GenericAPIView):
 
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
-
 class TokenObtainPairView(TokenViewBase):
     """
     Takes a set of user credentials and returns an access and refresh JSON web
@@ -84,3 +83,50 @@ class TokenVerifyView(TokenViewBase):
 
 
 token_verify = TokenVerifyView.as_view()
+
+
+class TokenObtainPairInCookiesView(TokenViewBase):
+    """
+    Takes a set of user credentials and returns an access and refresh JSON web
+    token pair to prove the authentication of those credentials.
+    """
+    serializer_class = serializers.TokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError as e:
+            raise InvalidToken(e.args[0])
+
+        response = Response(status=status.HTTP_200_OK)
+        response.set_cookie('access', serializer.validated_data['access'], httponly=True)
+        response.set_cookie('refresh', serializer.validated_data['refresh'], httponly=True)
+        return response
+
+
+token_obtain_pair_in_cookies = TokenObtainPairInCookiesView.as_view()
+
+
+class TokenRefreshInCookiesView(TokenViewBase):
+    """
+    Takes a refresh type JSON web token and returns an access type JSON web
+    token if the refresh token is valid.
+    """
+    serializer_class = serializers.TokenRefreshSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError as e:
+            raise InvalidToken(e.args[0])
+
+        response = Response(status=status.HTTP_200_OK)
+        response.set_cookie('access', serializer.validated_data['access'], httponly=True)
+
+        return response
+
+token_refresh_in_cookies = TokenRefreshInCookiesView.as_view()
