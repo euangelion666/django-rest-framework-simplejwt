@@ -84,7 +84,6 @@ class TokenVerifyView(TokenViewBase):
 
 token_verify = TokenVerifyView.as_view()
 
-
 class TokenObtainPairInCookiesView(TokenViewBase):
     """
     Takes a set of user credentials and returns an access and refresh JSON web
@@ -100,8 +99,7 @@ class TokenObtainPairInCookiesView(TokenViewBase):
         except TokenError as e:
             raise InvalidToken(e.args[0])
 
-        response = Response(status=status.HTTP_200_OK)
-        response.set_cookie('access', serializer.validated_data['access'], httponly=True)
+        response = Response(data={'refresh': serializer.validated_data['access']}, status=status.HTTP_200_OK)
         response.set_cookie('refresh', serializer.validated_data['refresh'], httponly=True)
         return response
 
@@ -117,16 +115,13 @@ class TokenRefreshInCookiesView(TokenViewBase):
     serializer_class = serializers.TokenRefreshSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data={'refresh': request.COOKIES['refresh']})
 
         try:
             serializer.is_valid(raise_exception=True)
         except TokenError as e:
             raise InvalidToken(e.args[0])
 
-        response = Response(status=status.HTTP_200_OK)
-        response.set_cookie('access', serializer.validated_data['access'], httponly=True)
-
-        return response
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 token_refresh_in_cookies = TokenRefreshInCookiesView.as_view()
