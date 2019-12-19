@@ -1,6 +1,8 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
 
+from datetime import datetime
+from rest_framework_simplejwt.settings import api_settings
 from . import serializers
 from .authentication import AUTH_HEADER_TYPES
 from .exceptions import InvalidToken, TokenError
@@ -92,6 +94,7 @@ class TokenObtainPairInCookiesView(TokenViewBase):
     serializer_class = serializers.TokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
+        print('++++++++++++++')
         serializer = self.get_serializer(data=request.data)
 
         try:
@@ -99,8 +102,13 @@ class TokenObtainPairInCookiesView(TokenViewBase):
         except TokenError as e:
             raise InvalidToken(e.args[0])
 
+        expires = datetime.utcnow() + api_settings.REFRESH_TOKEN_LIFETIME
+        print(expires)
         response = Response(data={'access': serializer.validated_data['access']}, status=status.HTTP_200_OK)
-        response.set_cookie('refresh', serializer.validated_data['refresh'], httponly=True)
+        response.set_cookie('refresh', 
+            serializer.validated_data['refresh'], 
+            httponly=True, 
+            expires=expires)
         return response
 
 
