@@ -133,3 +133,16 @@ class TokenRefreshInCookiesView(TokenViewBase):
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 token_refresh_in_cookies = TokenRefreshInCookiesView.as_view()
+
+class TokenDeleteFromCookies(generics.GenericAPIView):
+    permission_classes = ()
+    authentication_classes = ()
+
+    serializer_class = None
+
+    www_authenticate_realm = 'api'
+
+    def get(self, request, *args, **kwargs):
+        response = Response(status=status.HTTP_200_OK)
+        response.delete_cookie('refresh')
+        return response
